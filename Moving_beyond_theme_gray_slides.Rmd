@@ -1,0 +1,70 @@
+---
+title: "Moving beyond theme_gray: Exploring advanced ggplot2 for customized plot layouts"
+author: 
+  - "Presentation by Emma Skarstein"
+date: "October 2021"
+output:
+  revealjs::revealjs_presentation:
+    theme: night
+    transition: none
+    self_contained: true
+    css: slides.css
+    incremental: true
+  beamer_presentation:
+    toc: false
+    incremental: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+## Plan
+
+- Look at the data: Tate art collection artwork and artists
+- Look at three visualizations
+
+## Dataset: Tate art collection
+```{r}
+# Get the Data
+
+# Read in with tidytuesdayR package 
+# Install from CRAN via: install.packages("tidytuesdayR")
+# This loads the readme and all the datasets for the week of interest
+
+tuesdata <- tidytuesdayR::tt_load(2021, week = 3)
+artwork <- tuesdata$artwork
+artists <- tuesdata$artwork
+
+str(artwork)
+head(artists)
+```
+
+
+## Links for the scripts
+
+[Maia Pelletier](https://github.com/MaiaPelletier/tidytuesday/blob/master/R/2021_Week03_TateArt.R)
+
+[Ijeamaka Anyene](https://github.com/Ijeamakaanyene/tidytuesday/blob/master/scripts/2021_02_tate.Rmd)
+
+[Georgios Karamanis](https://github.com/gkaramanis/tidytuesday/blob/master/2021/2021-week2/art-collections.R )
+
+
+## Github pages of the creators
+
+https://github.com/MaiaPelletier
+
+https://github.com/Ijeamakaanyene
+
+https://github.com/gkaramanis 
+
+
+
+## Further resources
+
+- ["Spice up your standard charts", talk by Ijeamaka Anyene](https://www.youtube.com/watch?v=LlVf8foXUmM)
+  - Goes more into creating good "basic" plots
+  
+- Tidyverse cheat sheets: https://www.rstudio.com/resources/cheatsheets/ 
+
+- [BBC Visual and Data Journalism cookbook for R graphics](https://bbc.github.io/rcookbook/)
