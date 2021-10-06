@@ -1,11 +1,11 @@
 ---
-title: "Moving beyond theme_gray: Exploring advanced ggplot2 for customized plot layouts"
+title: "Moving beyond theme_gray: Exploring customized themes for improved visualizations in ggplot2"
 author: 
   - "Presentation by Emma Skarstein"
 date: "October 2021"
 output:
   revealjs::revealjs_presentation:
-    theme: night
+    theme: simple
     transition: none
     self_contained: true
     css: slides.css
@@ -19,44 +19,297 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
+```{r, echo = FALSE}
+library(tidyverse)
+library(tidytuesdayR)
+library(showtext)
+library(myGraphicsToolkit)
+library(patchwork)
+```
+
+
+## Aim
+
+Show how to set up custom themes to make effective data visualizations in less time.
+
+
+## Why make your own themes?
+
+- Consistent graphical expression
+
+- Save time
+
+- Modify theme to match presentation or poster
+
+
 ## Plan
 
-- Look at the data: Tate art collection artwork and artists
-- Look at three visualizations
+- Look at the data: Tate art collection artwork and artists, set up basic visualization
+- Build a custom theme and apply to plot
+- Look at BBC's custom theme
 
 ## Dataset: Tate art collection
-```{r}
-# Get the Data
-
+```{r, eval = FALSE, results = 'hide'}
 # Read in with tidytuesdayR package 
 # Install from CRAN via: install.packages("tidytuesdayR")
 # This loads the readme and all the datasets for the week of interest
 
 tuesdata <- tidytuesdayR::tt_load(2021, week = 3)
 artwork <- tuesdata$artwork
-artists <- tuesdata$artwork
+artists <- tuesdata$artists
+art_artist <- right_join(artists, artwork, by = c("name" = "artist")) %>%
+  filter(year>1700) %>% drop_na(gender)
+```
+```{r, echo = FALSE}
+art_artist <- readRDS("art_artist.RDS")
+```
 
-str(artwork)
-head(artists)
+- each row is a piece of art at the Tate art museum
+- we have artist info such as name, gender, year of birth and death, place of birth and death
+- we have artwork info such as year of creation, year of acquisition, height and width of painting, medium
+
+
+## Basic visualization
+
+```{r, fig.height=4}
+basic <- ggplot(art_artist, aes(x = year, fill = gender)) +
+  geom_bar()
+basic
+```
+
+## ggplot2 themes
+
+```{r, echo = FALSE}
+gray <- basic + theme_gray() + ggtitle("theme_gray")
+bw <- basic + theme_bw() + ggtitle("theme_bw")
+linedraw <- basic + theme_linedraw() + ggtitle("theme_linedraw")
+light <- basic + theme_light() + ggtitle("theme_light")
+dark <- basic + theme_dark() + ggtitle("theme_dark")
+minimal <- basic + theme_minimal() + ggtitle("theme_minimal")
+classic <- basic + theme_classic() + ggtitle("theme_classic")
+void <- basic + theme_void() + ggtitle("theme_void")
+test <- basic + theme_test() + ggtitle("theme_test")
+
+(gray + bw + linedraw) /
+  (light + dark + minimal) /
+  (classic + void + test)
 ```
 
 
-## Links for the scripts
+
+## Setting up a theme
+```{r, eval = FALSE}
+my_basic_theme <- function(DEFAULT ARGUMENTS){
+  return_theme <- theme(
+    # (TEXT FORMAT)
+    ...
+
+    # AXIS FORMAT
+    axis...
+
+    # LEGEND FORMAT
+    legend...
+
+    # BACKGROUND FORMAT
+    panel...
+    plot...
+    
+    # FACETING FORMAT
+    strip...
+
+  return(return_theme)
+}
+```
+
+## Basic visualization
+
+```{r, echo = FALSE, fig.height=4}
+basic_facet <- ggplot(art_artist, aes(x = year, fill = gender)) +
+  geom_bar() + facet_grid(rows = vars(gender))
+basic_facet
+```
+
+## My theme
+```{r}
+my_basic_theme <- function(base_size = 12,
+                           base_family = 'sans'){
+  return_theme <- theme(
+    # TEXT FORMAT
+    text = element_text(family = base_family, size = base_size),
+    axis.text = element_text(size = 10,
+                             color = "black"),
+    plot.title = element_text(size = 20,
+                              margin = margin(b = 5)),
+    plot.subtitle = element_text(size = 15,
+                                 margin = margin(b = 10)),
+
+    # AXIS FORMAT
+    axis.title = element_blank(),
+
+    # LEGEND FORMAT
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.justification = 0,
+    legend.text = element_text(size = 15,
+                               family = base_family),
+
+    # BACKGROUND FORMAT
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "#F9F8F8"),
+    panel.border = element_rect(color = "gray", fill = NA))
+
+  return(return_theme)
+}
+```
+
+## My theme
+
+```{r, fig.height = 4}
+# my_basic_theme
+basic + my_basic_theme()
+```
+
+## My theme +++
+```{r, eval = FALSE}
+# Specify this for font
+font_add_google(name = "Nunito", family = "Nunito")
+#font_families()
+showtext_auto()
+
+basic +
+  scale_fill_manual(values = c("#EC7238", "#66B4C0", "#1E4A76")) +
+  scale_x_continuous(breaks = seq(1700, 2012, by = 50),
+                     expand = c(0.05, 0.05)) +
+  scale_y_continuous(limits = c(0, 3300),
+                     expand = c(0.001, 0)) +
+  labs(title = "TATE ART MUSEUM: Pieces created each year",
+       subtitle = "1700 - 2012",
+       caption = "Source: Tate Art Museum / TidyTuesday | Visualization: Emma Skarstein") +
+  my_basic_theme(base_family = "Nunito")
+```
+
+## My theme +++
+```{r, echo = FALSE, fig.height = 4}
+# Specify this for font
+font_add_google(name = "Nunito", family = "Nunito")
+showtext_auto()
+
+basic +
+  scale_fill_manual(values = c("#EC7238", "#66B4C0", "#1E4A76")) +
+  scale_x_continuous(breaks = seq(1700, 2012, by = 50),
+                     expand = c(0.05, 0.05)) +
+  scale_y_continuous(limits = c(0, 3300),
+                     expand = c(0.001, 0)) +
+  labs(title = "TATE ART MUSEUM: Pieces created each year",
+       subtitle = "1700 - 2012",
+       caption = "Source: Tate Art Museum / TidyTuesday | Visualization: Emma Skarstein") +
+  my_basic_theme(base_family = "Nunito")
+```
+
+
+## BBC rCookbook
+![BBC graphics](bbc_graphics.png)
+
+
+## BBC's theme
+
+```{r}
+bbc_style <- function() {
+  font <- "Helvetica"
+
+  ggplot2::theme(
+
+  #Text format:
+  #This sets the font, size, type and colour of text for the chart's title
+  plot.title = ggplot2::element_text(family=font,
+                            size=28,
+                            face="bold",
+                            color="#222222"),
+  #This sets the font, size, type and colour of text for the chart's subtitle, as well as setting a margin between the title and the subtitle
+  plot.subtitle = ggplot2::element_text(family=font,
+                               size=22,
+                               margin=ggplot2::margin(9,0,9,0)),
+  plot.caption = ggplot2::element_blank(),
+  #This leaves the caption text element empty, because it is set elsewhere in the finalise plot function
+
+  #Legend format
+  #This sets the position and alignment of the legend, removes a title and backround for it and sets the requirements for any text within the legend. The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
+  legend.position = "top",
+  legend.text.align = 0,
+  legend.background = ggplot2::element_blank(),
+  legend.title = ggplot2::element_blank(),
+  legend.key = ggplot2::element_blank(),
+  legend.text = ggplot2::element_text(family=font,
+                             size=18,
+                             color="#222222"),
+
+  #Axis format
+  #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+  axis.title = ggplot2::element_blank(),
+  axis.text = ggplot2::element_text(family=font,
+                           size=18,
+                           color="#222222"),
+  axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
+  axis.ticks = ggplot2::element_blank(),
+  axis.line = ggplot2::element_blank(),
+
+  #Grid lines
+  #This removes all minor gridlines and adds major y gridlines. In many cases you will want to change this to remove y gridlines and add x gridlines. The cookbook shows you examples for doing so
+  panel.grid.minor = ggplot2::element_blank(),
+  panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+  panel.grid.major.x = ggplot2::element_blank(),
+
+  #Blank background
+  #This sets the panel background as blank, removing the standard grey ggplot background colour from the plot
+  panel.background = ggplot2::element_blank(),
+
+  #Strip background (#This sets the panel background for facet-wrapped plots to white, removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22)
+  strip.background = ggplot2::element_rect(fill="white"),
+  strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
+  )
+}
+```
+
+
+## BBC's theme
+
+```{r, warning = FALSE, eval = FALSE}
+#devtools::install_github('bbc/bbplot')
+library(bbplot)
+
+basic + scale_fill_manual(values = c("#1380A1", "#FAAB18")) +
+  scale_x_continuous(breaks = seq(1700, 2012, by = 50),
+                     expand = c(0.05, 0.05)) +
+  scale_y_continuous(limits = c(0, 3300),
+                     expand = c(0.001, 0)) +
+  labs(title = "TATE ART MUSEUM\nPieces created each year",
+       subtitle = "1700 - 2012",
+       caption = "Source: Tate Art Museum / TidyTuesday | Visualization: Emma Skarstein") +
+  bbc_style()
+```
+
+## BBC's theme
+
+```{r, warning = FALSE, echo = FALSE}
+#devtools::install_github('bbc/bbplot')
+library(bbplot)
+
+basic + scale_fill_manual(values = c("#1380A1", "#FAAB18")) +
+  scale_x_continuous(breaks = seq(1700, 2012, by = 50),
+                     expand = c(0.05, 0.05)) +
+  scale_y_continuous(limits = c(0, 3300),
+                     expand = c(0.001, 0)) +
+  labs(title = "TATE ART MUSEUM\nPieces created each year",
+       subtitle = "1700 - 2012",
+       caption = "Source: Tate Art Museum / TidyTuesday | Visualization: Emma Skarstein") +
+  bbc_style()
+```
+
+## Other visualizations
 
 [Maia Pelletier](https://github.com/MaiaPelletier/tidytuesday/blob/master/R/2021_Week03_TateArt.R)
 
-[Ijeamaka Anyene](https://github.com/Ijeamakaanyene/tidytuesday/blob/master/scripts/2021_02_tate.Rmd)
-
 [Georgios Karamanis](https://github.com/gkaramanis/tidytuesday/blob/master/2021/2021-week2/art-collections.R )
-
-
-## Github pages of the creators
-
-https://github.com/MaiaPelletier
-
-https://github.com/Ijeamakaanyene
-
-https://github.com/gkaramanis 
 
 
 
